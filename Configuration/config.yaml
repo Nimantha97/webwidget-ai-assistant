@@ -1,0 +1,237 @@
+# OPTIMIZED Configuration for HIGH ACCURACY
+# Updated: 2026-01-01
+
+# Embeddings Configuration
+embeddings:
+  model: "all-MiniLM-L6-v2"
+  dimension: 384
+  batch_size: 32
+  device: "cpu"
+
+# CRITICAL: Chunking - Smaller chunks = Better accuracy
+chunking:
+  markdown:
+    chunk_size: 600        # REDUCED from 800 (more focused chunks)
+    chunk_overlap: 100     # REDUCED from 150
+    preserve_headers: true
+    separators: ["\n\n", "\n", ". ", " ", ""]
+
+  code:
+    chunk_size: 800        # REDUCED from 1000 (better for Java methods)
+    chunk_overlap: 150     # Keep some overlap
+    preserve_methods: true
+    preserve_classes: true
+    language: "java"
+
+  schema:
+    granularity: "table"
+    include_relationships: true
+    preserve_constraints: true
+
+# CRITICAL: Hybrid Search - Tuned for accuracy
+hybrid_search:
+  # REDUCED top-k for initial retrieval
+  vector_top_k: 15         # REDUCED from 20 (get fewer, better results)
+  bm25_top_k: 15           # REDUCED from 20
+  graph_top_k: 5           # REDUCED from 10
+
+  # RRF parameter
+  rrf_k: 60
+
+  # CRITICAL: Query-specific alphas (tuned)
+  default_alpha: 0.6       # INCREASED (favor semantic understanding)
+
+  alpha_by_type:
+    documentation: 0.7     # INCREASED (more semantic)
+    code_search: 0.5       # BALANCED (equal vector/keyword)
+    schema: 0.4            # INCREASED (better for SQL)
+    debugging: 0.6         # INCREASED (semantic understanding)
+    general: 0.6           # INCREASED
+
+# CRITICAL: Reranking - MUST be enabled for accuracy
+reranking:
+  enabled: true            # ✅ CRITICAL FOR ACCURACY
+  model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  top_k: 3                 # REDUCED from 5 (only top 3 to LLM)
+  batch_size: 16
+  device: "cpu"
+
+# CRITICAL: LLM Configuration - OPTIMIZED
+llm:
+  model_name: "Qwen/Qwen2.5-Coder-7B-Instruct-GGUF"
+  model_file: "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
+  quantization: "4bit"
+
+  # CRITICAL: Generation parameters for accuracy
+  temperature: 0.05        # REDUCED from 0.1 (more deterministic)
+  top_p: 0.95             # INCREASED from 0.9 (better quality)
+  max_tokens: 1024        # REDUCED from 2048 (faster, focused)
+  context_window: 32768   # INCREASED from 4096 (use full model capacity)
+
+  # Tool calling
+  enable_tools: true
+  max_tool_iterations: 3
+
+# Database Configuration
+database:
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "ideabizadmin"
+    read_only: true
+    pool_size: 5
+
+  neo4j:
+    uri: "bolt://localhost:7687"
+    max_connection_lifetime: 3600
+
+# Vector Store Configuration
+vectorstore:
+  type: "chromadb"
+  persist_directory: "data/chroma"
+  collection_name: "webwidget_knowledge"
+  distance_metric: "cosine"
+
+webwidget_project:
+  root: "C:/NewRepo/ideabiz-web-widgets"
+  java_src: "C:/NewRepo/ideabiz-web-widgets/src/main/java"
+  docs: "C:/NewRepo/ideabiz-web-widgets/docs"
+
+# Chat History Configuration
+history:
+  backend: "sqlite"
+  database_path: "data/history.db"
+  max_turns_per_session: 10  # REDUCED from 20 (less context)
+  session_timeout_hours: 24
+
+# CRITICAL: Query Processing for accuracy
+query_processing:
+  enable_expansion: true
+  expansion_terms: 2        # REDUCED from 3 (more focused)
+  enable_classification: true
+
+  # Query type patterns
+  patterns:
+    code_search:
+      - "class"
+      - "method"
+      - "function"
+      - "controller"
+      - "service"
+      - "repository"
+      - "how does"
+      - "what does"
+      - "explain"
+    schema:
+      - "table"
+      - "column"
+      - "foreign key"
+      - "schema"
+      - "database"
+    debugging:
+      - "error"
+      - "bug"
+      - "exception"
+      - "debug"
+      - "issue"
+      - "fix"
+      - "why"
+    documentation:
+      - "architecture"
+      - "design"
+      - "pattern"
+      - "overview"
+
+# Graph Configuration (Optional - Phase 2)
+graph:
+  enabled: false           # Set to true when Neo4j is ready
+  relationship_types:
+    - "CALLS"
+    - "USES"
+    - "EXTENDS"
+    - "IMPLEMENTS"
+    - "QUERIES"
+  max_path_depth: 2        # REDUCED from 3
+  include_in_context: true
+
+# Caching Configuration
+caching:
+  enabled: true
+  max_size: 100
+  ttl: 3600
+  backend: "memory"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/app.log"
+  rotation: "10 MB"
+  retention: "1 week"
+
+  # Detailed debugging
+  retrieval_debug: true
+  save_queries: true
+  query_log_file: "logs/queries.jsonl"
+
+# Performance Configuration
+performance:
+  async_enabled: true
+  batch_processing: true
+  parallel_retrieval: true
+
+  # Timeouts
+  retrieval_timeout: 5
+  llm_timeout: 60          # INCREASED from 30 (give more time)
+
+# Security Configuration
+security:
+  validate_uploads: true
+  max_upload_size_mb: 10
+  allowed_extensions: [".md", ".txt", ".pdf", ".java", ".sql", ".log"]
+  sanitize_sql: true
+  prevent_injection: true
+
+# Evaluation Configuration
+evaluation:
+  test_file: "tests/test_queries.json"
+  metrics:
+    - "recall@5"
+    - "mrr"
+    - "ndcg@5"
+    - "accuracy"
+  baseline_comparison: true
+
+# Feature Flags
+features:
+  phase1:
+    explain_features: true
+    answer_architecture: true
+    debug_issues: true
+    search_code: true
+
+  phase2:
+    generate_sql: false    # Disable until Phase 2
+    generate_csv: false
+    suggest_code: true
+    generate_code: false
+    fix_bugs: true
+
+# Development Settings
+development:
+  hot_reload: true
+  debug_mode: false
+  mock_llm: false
+
+# Production Settings
+production:
+  api_rate_limit: 60
+  enable_cors: true
+  allowed_origins: ["http://localhost:3000"]
+
+# ACCURACY THRESHOLDS (NEW)
+accuracy:
+  min_chunk_score: 0.5     # Minimum relevance score
+  max_chunks_to_llm: 3     # CRITICAL: Only send top 3 to LLM
+  max_context_length: 4000 # CRITICAL: Limit context size
+  enable_aggressive_filtering: true
